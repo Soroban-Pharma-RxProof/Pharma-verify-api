@@ -1,0 +1,165 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  REGULATOR
+  MANUFACTURER
+  DISTRIBUTOR
+  PHARMACY
+  ADMIN
+}
+
+enum ParticipantStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+model User {
+  id             String    @id @default(uuid())
+  stellarAddress String    @unique
+  role           UserRole
+  nonce          String    @default(uuid())
+  active         Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  applications   ParticipantApplication[]
+
+  @@index([stellarAddress])
+  @@index([role])
+}
+
+model ParticipantApplication {
+  id               String            @id @default(uuid())
+  applicantAddress String            @unique
+  organizationName String
+  role             UserRole
+  licenseNumber    String
+  licenseDocUrl    String
+  metadataHash     String
+  status           ParticipantStatus @default(PENDING)
+  reviewedBy       String?
+  rejectionReason  String?
+  onChainTxHash    String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  user             User?             @relation(fields: [applicantAddress], references: [stellarAddress])
+
+  @@index([status])
+  @@index([role])
+}
+
+model Batch {
+  id                  String       @id @default(uuid())
+  batchId             String       @unique
+  productName         String
+  dosage              String
+  manufacturerAddress String
+  currentCustodian    String
+  merkleRoot          String
+  totalQuantity       Int
+  dispensedCount      Int          @default(0)
+  totalStrips         Int          @default(1)
+  unitsPerStrip       Int          @default(10)
+  expiryTimestamp     BigInt
+  metadataHash        String
+  status              String       @default("ACTIVE")
+  recallReason        String?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  serials             PackSerial[]
+  custodyLogs         CustodyLog[]
+  dispenseLogs        DispenseLog[]
+  anomalies           AnomalyAlert[]
+
+  @@index([batchId])
+  @@index([manufacturerAddress])
+  @@index([currentCustodian])
+  @@index([status])
+}
+
+model PackSerial {
+  id                  String   @id @default(uuid())
+  batchId             String
+  serialHash          String   @unique
+  encryptedSerial     String
+  iv                  String
+  authTag             String
+  leafIndex           Int
+  isDispensed         Boolean  @default(false)
+  dispensedStripsMask Int      @default(0)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  batch               Batch    @relation(fields: [batchId], references: [batchId], onDelete: Cascade)
+
+  @@index([batchId])
+  @@index([serialHash])
+}
+
+model CustodyLog {
+  id             String   @id @default(uuid())
+  batchId        String
+  fromAddress    String
+  toAddress      String
+  txHash         String
+  ledgerSequence BigInt
+  timestamp      DateTime @default(now())
+
+  batch          Batch    @relation(fields: [batchId], references: [batchId], onDelete: Cascade)
+
+  @@index([batchId])
+  @@index([fromAddress])
+  @@index([toAddress])
+}
+
+model DispenseLog {
+  id              String   @id @default(uuid())
+  batchId         String
+  serialHash      String
+  pharmacyAddress String
+  stripIndex      Int?
+  txHash          String
+  timestamp       DateTime @default(now())
+
+  batch           Batch    @relation(fields: [batchId], references: [batchId], onDelete: Cascade)
+
+  @@index([batchId])
+  @@index([serialHash])
+  @@index([pharmacyAddress])
+}
+
+model AnomalyAlert {
+  id         String   @id @default(uuid())
+  batchId    String?
+  serialHash String?
+  rule       String
+  severity   String
+  details    String
+  resolved   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  batch      Batch?   @relation(fields: [batchId], references: [batchId], onDelete: SetNull)
+
+  @@index([rule])
+  @@index([severity])
+  @@index([resolved])
+}
+
+model IndexerCheckpoint {
+  id          String   @id @default("singleton")
+  lastLedger  BigInt   @default(0)
+  lastCursor  String?
+  updatedAt   DateTime @updatedAt
+}
