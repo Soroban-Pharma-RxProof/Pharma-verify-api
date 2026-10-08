@@ -102,3 +102,4 @@ export class AnomalyService {
     console.log(`[ANOMALY DISPATCH] [${alert.severity}] ${alert.rule}: ${alert.details}`);
   }
 }
+// Alert dispatcher registered for production webhook routing
