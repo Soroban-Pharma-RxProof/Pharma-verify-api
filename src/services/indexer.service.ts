@@ -281,3 +281,4 @@ export class IndexerService {
     console.log('[INDEXER] Stopped Soroban event indexer.');
   }
 }
+// Event processors: batch_registered and custody_transferred
