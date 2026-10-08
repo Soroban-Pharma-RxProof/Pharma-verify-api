@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: rxproof-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: rxproof
+      POSTGRES_PASSWORD: rxproof_secure_password_2026
+      POSTGRES_DB: rxproof_db
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U rxproof -d rxproof_db']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+    container_name: rxproof-api
+    restart: always
+    ports:
+      - '4000:4000'
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      HOST: '0.0.0.0'
+      DATABASE_URL: 'postgresql://rxproof:rxproof_secure_password_2026@postgres:5432/rxproof_db?schema=public'
+      STELLAR_NETWORK: 'TESTNET'
+      STELLAR_RPC_URL: 'https://soroban-testnet.stellar.org'
+      STELLAR_HORIZON_URL: 'https://horizon-testnet.stellar.org'
+      CONTRACT_ID: 'CA2JMBWAT2DDZZHCULUJXWBZ7N27QO2LRADSPNR4CDUULBWIGCJ2CAZO'
+      SERVER_SIGNING_KEY: 'SBDP5K4GJBEUSNVTSFDPVD76S5WJ5QQENYCIZIQRVRJ5JCUAKOIX2LPC'
+      JWT_SECRET: 'rxproof_enterprise_jwt_secret_key_minimum_32_chars_2026'
+      AES_ENCRYPTION_KEY: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
+      STORAGE_DRIVER: 'local'
+      UPLOAD_DIR: './uploads'
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  indexer:
+    build: .
+    container_name: rxproof-indexer
+    restart: always
+    command: ["node", "--loader", "tsx", "src/indexer/worker.ts"]
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: 'postgresql://rxproof:rxproof_secure_password_2026@postgres:5432/rxproof_db?schema=public'
+      STELLAR_NETWORK: 'TESTNET'
+      STELLAR_RPC_URL: 'https://soroban-testnet.stellar.org'
+      CONTRACT_ID: 'CA2JMBWAT2DDZZHCULUJXWBZ7N27QO2LRADSPNR4CDUULBWIGCJ2CAZO'
+      AES_ENCRYPTION_KEY: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:
