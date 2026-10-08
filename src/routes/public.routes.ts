@@ -283,3 +283,4 @@ export async function publicRoutes(fastify: FastifyInstance) {
   );
 }
 // Provenance custody journey history endpoint
+// Consumer counterfeit adverse report endpoint
