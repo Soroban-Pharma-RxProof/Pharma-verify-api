@@ -103,3 +103,4 @@ export async function buildApp(): Promise<FastifyInstance> {
 
   return app;
 }
+// Security plugins: CORS, Helmet, RateLimiter, Multipart, ErrorHandler
