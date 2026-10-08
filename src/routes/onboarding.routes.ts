@@ -226,3 +226,4 @@ export async function onboardingRoutes(fastify: FastifyInstance) {
     }
   );
 }
+// Regulator review queue and on-chain contract approval handlers
