@@ -266,3 +266,4 @@ export async function batchRoutes(fastify: FastifyInstance) {
   );
 }
 // Query handlers for batch inspection and filtering
+// Packaging serial export handler for factory printing
