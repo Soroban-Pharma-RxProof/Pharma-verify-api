@@ -283,3 +283,4 @@ export class IndexerService {
 }
 // Event processors: batch_registered and custody_transferred
 // Event processors: pack_dispensed, partial_dispensed, batch_recalled
+// Checkpoint tracking with lastLedger and lastCursor persistence
