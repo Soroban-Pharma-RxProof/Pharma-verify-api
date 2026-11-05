@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { buildApp } from '../src/app.js';
 
-describe('Fastify Application Endpoints', () => {
-  it('GET /health returns 200 OK with service name', async () => {
+describe('Fastify Application Endpoints & Input Validation', () => {
+  it('GET /health returns 200 OK with service name and uptime status', async () => {
     const app = await buildApp();
     const response = await app.inject({
       method: 'GET',
@@ -29,7 +29,7 @@ describe('Fastify Application Endpoints', () => {
     await app.close();
   });
 
-  it('POST /api/v1/public/verify rejects requests missing both serial and serialHash', async () => {
+  it('GET /api/v1/public/verify rejects requests missing both serial and serialHash', async () => {
     const app = await buildApp();
     const response = await app.inject({
       method: 'GET',
@@ -41,5 +41,20 @@ describe('Fastify Application Endpoints', () => {
     expect(body.error).toContain('Either serial or serialHash must be provided');
     await app.close();
   });
+
+  it('POST /api/v1/public/report rejects payloads missing reason field', async () => {
+    const app = await buildApp();
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/v1/public/report',
+      headers: { 'Content-Type': 'application/json' },
+      payload: {
+        batchId: 'BATCH-TEST',
+        // missing reason
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+    await app.close();
+  });
 });
-// Public verification and reporting integration tests verified
