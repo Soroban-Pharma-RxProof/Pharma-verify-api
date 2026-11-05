@@ -1,0 +1,36 @@
+name: Bug Report
+description: Create a report to help us improve the API service
+title: "[BUG]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting an issue with Pharma Verify API!
+  - type: input
+    id: contact
+    attributes:
+      label: Contact Info
+      placeholder: @github-user
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe the problem and what behavior was expected.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      placeholder: |
+        1. Send POST request to '/api/v1/...'
+        2. With payload '...'
+        3. Response code received '...'
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Node.js version, database version, OS.
