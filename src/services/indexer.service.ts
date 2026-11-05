@@ -266,13 +266,16 @@ export class IndexerService {
     this.isRunning = true;
     console.log(`[INDEXER] Started Soroban event indexer for contract: ${config.CONTRACT_ID}`);
 
+    let currentInterval = intervalMs;
     while (this.isRunning) {
       try {
         await this.processEventsOnce();
+        currentInterval = intervalMs;
       } catch (err: any) {
         console.error('[INDEXER] Polling cycle error:', err.message);
+        currentInterval = Math.min(currentInterval * 2, 30000);
       }
-      await new Promise((res) => setTimeout(res, intervalMs));
+      await new Promise((res) => setTimeout(res, currentInterval));
     }
   }
 
