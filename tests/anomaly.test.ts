@@ -4,6 +4,18 @@ import { prisma } from '../src/lib/prisma.js';
 
 describe('AnomalyService Logic & Supply Chain Rules', () => {
   it('correctly identifies custody chain skips from manufacturer direct to pharmacy', async () => {
+    const alertSpy = vi.spyOn(prisma.anomalyAlert, 'create').mockResolvedValue({
+      id: 'mock-alert-uuid',
+      rule: 'CUSTODY_SKIP',
+      severity: 'MEDIUM',
+      batchId: 'BATCH-001',
+      serialHash: null,
+      details: 'Direct manufacturer-to-pharmacy custody transition observed',
+      resolved: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as any);
+
     // Direct skip
     const isSkip = await AnomalyService.checkCustodySkip('BATCH-001', 'MANUFACTURER', 'PHARMACY');
     expect(isSkip).toBe(true);
@@ -14,6 +26,8 @@ describe('AnomalyService Logic & Supply Chain Rules', () => {
 
     const validStep2 = await AnomalyService.checkCustodySkip('BATCH-001', 'DISTRIBUTOR', 'PHARMACY');
     expect(validStep2).toBe(false);
+
+    alertSpy.mockRestore();
   });
 
   it('detects duplicate burns when serial is already marked as dispensed', async () => {
