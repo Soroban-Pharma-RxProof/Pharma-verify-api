@@ -2,9 +2,12 @@
 
 Enterprise backend service for counterfeit medicine verification, batch custody tracking, and supply chain anomaly detection powered by **Stellar Soroban smart contracts**.
 
-[![Build Status](https://github.com/Soroban-Pharma-RxProof/Pharma-verify-api/actions/workflows/ci.yml/badge.svg)](https://github.com/Soroban-Pharma-RxProof/Pharma-verify-api/actions)
+[![CI](https://github.com/Soroban-Pharma-RxProof/Pharma-verify-api/actions/workflows/ci.yml/badge.svg)](https://github.com/Soroban-Pharma-RxProof/Pharma-verify-api/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Stellar: Soroban v22](https://img.shields.io/badge/Soroban-SDK%20v22-brightgreen.svg)](https://stellar.org)
+[![Fastify: 5.x](https://img.shields.io/badge/Fastify-5.2-black.svg?logo=fastify)](https://fastify.dev/)
+[![Prisma: 6.x](https://img.shields.io/badge/Prisma-6.4-2D3748.svg?logo=prisma)](https://www.prisma.io/)
+[![Database: PostgreSQL 16](https://img.shields.io/badge/PostgreSQL-16-336791.svg?logo=postgresql)](https://www.postgresql.org/)
 
 ---
 
@@ -80,7 +83,7 @@ The **Pharma-Verify-API** serves as the cryptographic and operational bridge bet
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js >= 20.0.0
+- Node.js >= 20.0.0 LTS
 - Docker and Docker Compose
 - PostgreSQL 16 (or run via Docker)
 
@@ -90,84 +93,63 @@ Create a `.env` file based on `.env.example`:
 NODE_ENV=development
 PORT=4000
 HOST=0.0.0.0
-DATABASE_URL=postgresql://rxproof:rxproof_secure_password_2026@localhost:5432/rxproof_db?schema=public
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/pharma_rxproof?schema=public
 STELLAR_NETWORK=TESTNET
 STELLAR_RPC_URL=https://soroban-testnet.stellar.org
 STELLAR_HORIZON_URL=https://horizon-testnet.stellar.org
 CONTRACT_ID=CA2JMBWAT2DDZZHCULUJXWBZ7N27QO2LRADSPNR4CDUULBWIGCJ2CAZO
-SERVER_SIGNING_KEY=SBDP5K4GJBEUSNVTSFDPVD76S5WJ5QQENYCIZIQRVRJ5JCUAKOIX2LPC
 JWT_SECRET=rxproof_enterprise_jwt_secret_key_minimum_32_chars_2026
 AES_ENCRYPTION_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
-STORAGE_DRIVER=local
-UPLOAD_DIR=./uploads
 ```
 
-### Installation & Migration
+### Installation
 ```bash
-# Install dependencies
-npm install
+# Clone the repository
+git clone https://github.com/Soroban-Pharma-RxProof/Pharma-verify-api.git
+cd Pharma-verify-api
+
+# Install dependencies deterministically
+npm ci
+```
+
+### Database Initialization
+```bash
+# Run PostgreSQL container via Docker
+docker run --name rxproof-postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=pharma_rxproof -p 5432:5432 -d postgres:16-alpine
+
+# Apply Prisma migrations
+npx prisma migrate deploy
 
 # Generate Prisma Client
-npm run prisma:generate
-
-# Run Database Migrations
-npm run prisma:migrate
-
-# Seed Demo Data
-npm run prisma:seed
+npx prisma generate
 ```
 
-### Running Locally
+### Development & Service Commands
 ```bash
-# Start Fastify API server with hot-reload
+# Start API dev server with live reload
 npm run dev
 
-# Start background Soroban event indexer
+# Start background Soroban event indexer daemon
 npm run indexer
-```
 
-### Running with Docker Compose
-```bash
-docker-compose up --build
+# Run unit and integration test suites
+npm test
+
+# Build production bundle
+npm run build
+npm start
 ```
 
 ---
 
-## 📡 API Reference
+## 🤝 Contributing & Security
 
-Interactive Swagger documentation is available at: `http://localhost:4000/docs`
-
-| Method | Endpoint | Access | Description |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/health` | Public | Service health and uptime |
-| `GET` | `/api/v1/auth/challenge` | Public | Request SEP-10 challenge transaction |
-| `POST` | `/api/v1/auth/token` | Public | Submit signed challenge for JWT token |
-| `POST` | `/api/v1/onboarding/apply` | Public | Submit participant licensing application |
-| `GET` | `/api/v1/onboarding/queue` | Regulator | Review pending participant applications |
-| `POST` | `/api/v1/onboarding/:id/approve` | Regulator | Approve and register on Soroban contract |
-| `POST` | `/api/v1/onboarding/:id/reject` | Regulator | Reject participant licensing application |
-| `POST` | `/api/v1/batches` | Manufacturer | Register batch and generate Merkle tree |
-| `GET` | `/api/v1/batches` | Authenticated | List registered batches |
-| `GET` | `/api/v1/batches/:batchId` | Authenticated | Inspect batch details and custody status |
-| `GET` | `/api/v1/batches/:batchId/export` | Manufacturer | Export pack serials for factory printing |
-| `GET` | `/api/v1/batches/:batchId/proof/:hash` | Public | Fetch isolated Merkle inclusion proof |
-| `GET` | `/api/v1/public/verify` | Public | Verify pack authenticity and clone check |
-| `GET` | `/api/v1/public/batches/:batchId/journey` | Public | View immutable supply chain custody trail |
-| `POST` | `/api/v1/public/report` | Public | Report suspicious/counterfeit medicine |
-| `GET` | `/api/v1/regulator/anomalies` | Regulator | List supply chain anomaly alerts |
-| `POST` | `/api/v1/regulator/anomalies/:id/resolve` | Regulator | Resolve anomaly alert with notes |
-| `GET` | `/api/v1/regulator/audit-trail/export` | Regulator | Export audit trail as CSV / JSON |
-
----
-
-## 🧪 Testing
-
-Execute the comprehensive Vitest test suite covering cryptographic utilities, Merkle proofs, SEP-10 authentication, anomaly rules, and Fastify endpoints:
-```bash
-npm run test
-```
+- Read our [CONTRIBUTING.md](CONTRIBUTING.md) for contribution workflows and branching conventions.
+- Consult [SECURITY.md](SECURITY.md) for vulnerability disclosure guidelines and cryptographic security details.
 
 ---
 
 ## 📄 License
-Licensed under the Apache License, Version 2.0.
+
+Licensed under the [Apache License, Version 2.0](LICENSE).
+Built for the Stellar Community and global pharmaceutical security.
